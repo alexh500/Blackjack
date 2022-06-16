@@ -28,24 +28,36 @@ class Card:
 
 
 class Dealer:
-    def __init__(self):
+    def __init__(self, deck):
         self.hand = random.choices(deck, k=1)
+        self.up_card = self.hand[0]
+        self.total = self.up_card.get_value()
 
 
 class Player:
-    def __init__(self):
+    def __init__(self, deck):
         self.hand = random.choices(deck, k=2)
-        self.card1, self.card2 = self.hand
-        self.total = self.card1.get_value() + self.card2.get_value()
-
+        self.total = 0
+        for i in self.hand:
+            self.total += i.get_value()
         # self.bet = bet
 
-    def return_name(self):
-        return self.card1.get_name(), self.card2.get_name()
+    def same_name(self):
+        return self.hand[0].get_name() == self.hand[1].get_name()
 
-    def same_card(self):
-        #return self.card1.same_value(self.card2)
-        return self.return_name()[0] == self.return_name()[1]
+
+class Game:
+    def __init__(self, deck, totals):
+        self.player = Player(deck)
+        self.dealer = Dealer(deck)
+        self.deck = deck
+        self.chart = totals
+
+    def determine_move(self):
+        if self.player.total == 16 and 8 < self.dealer.total or self.player.total == 15 and self.dealer.total == 10:
+            move = self.surrender()
+            print("hello")
+        elif self.player.same_name() and ()
 
     def hit(self):
         pass
@@ -68,5 +80,5 @@ deck = []
 for i in range(1, 5):
     for j in names:
         deck.append(Card(j))
-a = Player()
-print(a.total, a.return_name(), a.same_card())
+
+main = Game(deck, totals)
