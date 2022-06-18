@@ -38,8 +38,11 @@ class Player:
     def __init__(self, deck):
         self.hand = random.choices(deck, k=2)
         self.total = 0
+        self.low_total = 0
         for i in self.hand:
             self.total += i.get_value()
+        if self.hand[0].get_name() == "ace" or self.hand[1].get_name() == "ace":
+            self.low_total = self.total - 10
         # self.bet = bet
 
     def same_name(self):
@@ -54,10 +57,30 @@ class Game:
         self.chart = totals
 
     def determine_move(self):
+        print(self.player.hand[0].get_name(), self.player.hand[1].get_name(), self.player.total, self.dealer.up_card.
+              get_name())
         if self.player.total == 16 and 8 < self.dealer.total or self.player.total == 15 and self.dealer.total == 10:
-            move = self.surrender()
-            print("hello")
-        elif self.player.same_name() and ()
+            """move = self.surrender()"""
+            print("surrender")
+
+        elif self.player.same_name() and self.chart[self.player.hand[0].get_value() + 16][
+            self.dealer.up_card.get_value()
+            - 1] == "y":
+            """move=self.split()"""
+            print("split")
+
+        elif self.player.total < 9 or (self.chart[self.player.total - 7][self.dealer.total - 1] == "h" and
+                                       self.chart[self.player.total - 7][0] == str(self.player.total)):
+            """move = self.hit()"""
+            print("hit")
+
+        elif self.player.total > 16 or (self.chart[self.player.total - 7][self.dealer.total - 1] == "s" and
+                                        self.chart[self.player.total - 7][0] == str(self.player.total)):
+            """move = self.stand()"""
+            print("stand")
+        else:
+            """move = self.double()"""
+            print("double")
 
     def hit(self):
         pass
@@ -82,3 +105,4 @@ for i in range(1, 5):
         deck.append(Card(j))
 
 main = Game(deck, totals)
+main.determine_move()
