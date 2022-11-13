@@ -46,40 +46,56 @@ def initial_check(player_hand_value):
         return True
 
 
-def do_moves(player_hand, player_hand_value, dealer_hand, shoe, totals, first_move):
+def do_moves(player_hand, dealer_hand, shoe, totals, bet, first_move):
     print(player_hand, dealer_hand)
-    if player_hand_value == 21 and first_move:
+    if return_value_of_hand(player_hand) == 21 and first_move:
         blackjack_win()
-    elif player_hand_value == 16 and return_value_of_hand(
-            dealer_hand) > 8 or player_hand_value == 15 and return_value_of_hand(dealer_hand) == 15 and first_move:
+    elif return_value_of_hand(player_hand) > 21:
+        lose()
+
+    elif return_value_of_hand(player_hand) == 16 and return_value_of_hand(
+            dealer_hand) > 8 or return_value_of_hand(player_hand) == 15 and return_value_of_hand(dealer_hand) == 15 and\
+            first_move:
         surrender()
 
     elif same_card(player_hand[0], player_hand[1]) and totals[return_value_of_card(player_hand[0]) + 16][
-         return_value_of_card(dealer_hand[0]) - 1] == "y" and first_move:
+        return_value_of_card(dealer_hand[0]) - 1] == "y" and first_move:
         first_move = False
         split()
 
-    elif player_hand_value > 16:
-        stand()
+    elif return_value_of_hand(player_hand) > 16:
+        stand(player_hand, dealer_hand, shoe, bet)
 
-    elif player_hand_value < 9:
+    elif return_value_of_hand(player_hand) < 9:
         first_move = False
-        hit(player_hand, player_hand_value, dealer_hand, shoe, totals, first_move)
+        hit(player_hand, dealer_hand, shoe, totals, bet, first_move)
 
     else:
-        move = totals[player_hand_value - 7][return_value_of_card(dealer_hand[0]) - 1]
+        move = totals[return_value_of_hand(player_hand) - 7][return_value_of_card(dealer_hand[0]) - 1]
         if move == "d" and first_move:
             first_move = False
-            double()
+            double(player_hand, dealer_hand, shoe, bet)
         elif move == "s":
-            stand()
+            stand(player_hand, dealer_hand, shoe, bet)
         else:
             first_move = False
-            hit(player_hand, player_hand_value, dealer_hand, shoe, totals, first_move)
+            hit(player_hand, dealer_hand, shoe, totals, bet, first_move)
 
 
 def blackjack_win():
     print("blackjack")
+
+
+def win():
+    print("win")
+
+
+def lose():
+    print("lose")
+
+
+def draw():
+    print("draw")
 
 
 def surrender():
@@ -90,29 +106,45 @@ def split():
     print("split")
 
 
-def stand():
-    print("stand")
+def stand(player_hand, dealer_hand, shoe, bet):
+    while return_value_of_hand(dealer_hand) < 17:
+        dealer_hand.append(shoe.pop(0))
+
+    if return_value_of_hand(dealer_hand) > 21:
+        win()
+
+    elif return_value_of_hand(dealer_hand) > return_value_of_hand(player_hand):
+        lose()
+
+    elif return_value_of_hand(dealer_hand) < return_value_of_hand(player_hand):
+        win()
+
+    else:
+        draw()
 
 
-def double():
-    print("double")
-
-
-def hit(player_hand, player_hand_value, dealer_hand, shoe, totals, first_move):
+def double(player_hand, dealer_hand, shoe, bet):
+    bet *= 2
     player_hand.append(shoe.pop(0))
-    player_hand_value = return_value_of_hand(player_hand)
-    do_moves(player_hand, player_hand_value, dealer_hand, shoe, totals, first_move)
+    stand(player_hand, dealer_hand, shoe, bet)
+
+
+def hit(player_hand, dealer_hand, shoe, totals, bet, first_move):
+    player_hand.append(shoe.pop(0))
+    do_moves(player_hand, dealer_hand, shoe, totals, bet, first_move)
 
 
 def blackjack(shoe, totals):
+    bet = 1
     player_hand = deal_player_cards(shoe)
-    player_hand_value = return_value_of_hand(player_hand)
+
     dealer_hand = deal_dealer_cards(shoe)
-    do_moves(player_hand, player_hand_value, dealer_hand, shoe, totals, first_move=True)
+
+    do_moves(player_hand, dealer_hand, shoe, totals, bet, first_move=True)
 
 
 def main():
     pass
 
 
-blackjack(create_shoe(2), totals)
+blackjack(create_shoe(1), totals)
