@@ -1,6 +1,8 @@
 import random
 import csv
+import time
 
+start = time.time()
 totals_csv = open('Hard totals.csv', 'r')
 reader = csv.reader(totals_csv)
 totals = []
@@ -10,7 +12,7 @@ totals_csv.close()
 
 
 def create_shoe(num_of_decks):
-    shoe = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king", "ace"] * num_of_decks
+    shoe = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king", "ace"] * 4 * num_of_decks
     random.shuffle(shoe)
     return shoe
 
@@ -41,27 +43,31 @@ def deal_dealer_cards(shoe):
     return dealer_hand
 
 
-def initial_check(player_hand_value):
-    if player_hand_value == 21:
-        return True
+def create_bet():
+    bet = 1
+    return bet
 
 
 def do_moves(player_hand, dealer_hand, shoe, totals, bet, first_move):
     print(player_hand, dealer_hand)
     if return_value_of_hand(player_hand) == 21 and first_move:
         blackjack_win()
+
     elif return_value_of_hand(player_hand) > 21:
         lose()
 
+    elif len(player_hand) > 4:
+        win()
+
     elif return_value_of_hand(player_hand) == 16 and return_value_of_hand(
-            dealer_hand) > 8 or return_value_of_hand(player_hand) == 15 and return_value_of_hand(dealer_hand) == 15 and\
+            dealer_hand) > 8 or return_value_of_hand(player_hand) == 15 and return_value_of_hand(dealer_hand) == 15 and \
             first_move:
         surrender()
 
     elif same_card(player_hand[0], player_hand[1]) and totals[return_value_of_card(player_hand[0]) + 16][
         return_value_of_card(dealer_hand[0]) - 1] == "y" and first_move:
         first_move = False
-        split()
+        split(player_hand, dealer_hand)
 
     elif return_value_of_hand(player_hand) > 16:
         stand(player_hand, dealer_hand, shoe, bet)
@@ -102,8 +108,9 @@ def surrender():
     print("surrender")
 
 
-def split():
-    print("split")
+def split(player_hand, dealer_hand):
+    player_hand_2 = [player_hand.pop(0)]
+    return player_hand_2, player_hand
 
 
 def stand(player_hand, dealer_hand, shoe, bet):
@@ -135,7 +142,7 @@ def hit(player_hand, dealer_hand, shoe, totals, bet, first_move):
 
 
 def blackjack(shoe, totals):
-    bet = 1
+    bet = create_bet()
     player_hand = deal_player_cards(shoe)
 
     dealer_hand = deal_dealer_cards(shoe)
@@ -143,8 +150,14 @@ def blackjack(shoe, totals):
     do_moves(player_hand, dealer_hand, shoe, totals, bet, first_move=True)
 
 
-def main():
-    pass
+def main(num_of_decks, deck_penetration, rounds_to_play):
+    rounds_played = 0
+    while rounds_played < rounds_to_play:
+        shoe = create_shoe(num_of_decks)
+        while len(shoe) / (num_of_decks * 52) > deck_penetration:
+            blackjack(shoe, totals)
+            rounds_played += 1
 
 
-blackjack(create_shoe(1), totals)
+main(8, 0.5, 500000)
+print(time.time() - start)
