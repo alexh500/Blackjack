@@ -71,7 +71,8 @@ def do_moves(player_hand, dealer_hand, shoe, totals, bet, five_card_win, first_m
             return bet
 
         elif ((return_value_of_hand(player_hand) == 16 and return_value_of_hand(
-                dealer_hand) > 8) or (return_value_of_hand(player_hand) == 15 and return_value_of_hand(dealer_hand) == 15)) \
+                dealer_hand) > 8) or (
+                      return_value_of_hand(player_hand) == 15 and return_value_of_hand(dealer_hand) == 15)) \
                 and first_move:
             surrender(bet)
             print(player_hand, dealer_hand)
@@ -80,14 +81,13 @@ def do_moves(player_hand, dealer_hand, shoe, totals, bet, five_card_win, first_m
         elif same_card(player_hand[0], player_hand[1]) and totals[return_value_of_card(player_hand[0]) + 16][
             return_value_of_card(dealer_hand[0]) - 1] == "y" and first_move:
             first_move = False
-            split(bet)
+            split(bet, player_hand, dealer_hand, shoe, five_card_win, totals)
 
         elif return_value_of_hand(player_hand) > 16:
             return stand(player_hand, dealer_hand, shoe, bet)
 
         elif return_value_of_hand(player_hand) < 9:
             first_move = False
-            #hit(player_hand, dealer_hand, shoe, totals, bet, five_card_win, first_move)
             player_hand.append(shoe.pop(0))
         else:
             move = totals[return_value_of_hand(player_hand) - 7][return_value_of_card(dealer_hand[0]) - 1]
@@ -97,7 +97,6 @@ def do_moves(player_hand, dealer_hand, shoe, totals, bet, five_card_win, first_m
                 return stand(player_hand, dealer_hand, shoe, bet)
             else:
                 first_move = False
-                #hit(player_hand, dealer_hand, shoe, totals, bet, five_card_win, first_move)
                 player_hand.append(shoe.pop(0))
 
 
@@ -123,8 +122,11 @@ def surrender(bet):
     print("surrender")
 
 
-def split(bet):
+def split(bet, player_hand, dealer_hand, shoe, five_card_win, totals):
     print("split")
+    player_hand_2 = [player_hand.pop(0), shoe.pop(0)]
+    player_hand.append(shoe.pop(0))
+    do_moves(player_hand_2, dealer_hand, shoe, totals, bet, five_card_win, first_move=False)
 
 
 def stand(player_hand, dealer_hand, shoe, bet):
@@ -156,11 +158,6 @@ def double(player_hand, dealer_hand, shoe, bet):
     bet *= 2
     player_hand.append(shoe.pop(0))
     return stand(player_hand, dealer_hand, shoe, bet)
-
-
-def hit(player_hand, dealer_hand, shoe, totals, bet, five_card_win, first_move):
-    player_hand.append(shoe.pop(0))
-    do_moves(player_hand, dealer_hand, shoe, totals, bet, five_card_win, first_move)
 
 
 def blackjack(shoe, totals, five_card_win):
