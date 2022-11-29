@@ -1,6 +1,7 @@
 import random
 import csv
 import time
+import matplotlib.pyplot as plt
 
 start = time.time()
 totals_csv = open('Hard totals.csv', 'r')
@@ -171,14 +172,25 @@ def blackjack(shoe, totals, five_card_win):
 
 def main(num_of_decks, deck_penetration, rounds_to_play, five_card_win):
     rounds_played = 0
+    rounds = []
     net_profit = 0
+    profits = []
     while rounds_played < rounds_to_play:
         shoe = create_shoe(num_of_decks)
         while len(shoe) / (num_of_decks * 52) > deck_penetration:
             net_profit += blackjack(shoe, totals, five_card_win)
+            profits.append(net_profit)
             rounds_played += 1
-    print(net_profit)
+            rounds.append(rounds_played)
+    print(rounds_played, net_profit)
+    print(len(rounds), len(profits))
+    print(profits)
+    print(rounds)
+    x = rounds_played
+    y = rounds_played
+    plt.plot(x, y)
+    plt.show()
 
 
-main(8, 0.5, 100000, True)
+main(8, 0.5, 100, True)
 print(time.time() - start)
