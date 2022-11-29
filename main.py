@@ -2,6 +2,8 @@ import random
 import csv
 import time
 import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('TkAgg')
 
 start = time.time()
 totals_csv = open('Hard totals.csv', 'r')
@@ -186,11 +188,12 @@ def main(num_of_decks, deck_penetration, rounds_to_play, five_card_win):
     print(len(rounds), len(profits))
     print(profits)
     print(rounds)
-    x = rounds_played
-    y = rounds_played
+    x = rounds
+    y = profits
     plt.plot(x, y)
+    plt.title("Profit graph")
     plt.show()
 
 
-main(8, 0.5, 100, True)
+main(8, 0.5, 100000, True)
 print(time.time() - start)
