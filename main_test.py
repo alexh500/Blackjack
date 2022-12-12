@@ -44,3 +44,5 @@ class TestShoe:
         for i in range(0, 11):
             shoe = m.Shoe(i)
             assert shoe.get_length_of_shoe() == 52 * i
+
+
