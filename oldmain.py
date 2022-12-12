@@ -26,6 +26,7 @@ class Card:
     def get_name(self):
         return self.name
 
+
 class Shoe:
     def __init__(self, num_of_decks):
         self.num_of_decks = num_of_decks
@@ -37,24 +38,13 @@ class Shoe:
                     self.deck.append(Card(j))
         random.shuffle(self.deck)
 
+    def remove_card(self):
+        card = self.deck.pop()
+        return card
 
+    def get_length_of_shoe(self):
+        return len(self.deck)
 
-class Player:
-    def __init__(self):
-
-
-class Dealer:
-    pass
-
-class Round:
-    def __init__(self, game: Game):
-        self.player = Player()
-        self.dealer = Dealer()
-        self.game = game
-
-    def calculate_move(self):
-        while True:
-            if
 
 class Game:
     def __init__(self, rounds_to_play, num_of_decks, deck_penetration):
@@ -67,13 +57,41 @@ class Game:
         self.num_of_decks = num_of_decks
         self.deck_penetration = deck_penetration
 
-
     def simulate(self):
         while self.rounds_played < self.rounds_to_play:
-            self.shoe = self.shoe.create_shoe()
-            while self.rounds_played < self.rounds_to_play and len(self.shoe) > self.num_of_decks * 52 * self.deck_penetration:
-                round = Round(self)
+            self.shoe = Shoe(self.num_of_decks)
+            while self.rounds_played < self.rounds_to_play and self.shoe.get_length_of_shoe() > self.num_of_decks * 52 \
+                    * self.deck_penetration:
+                one_round = Round(self)
+                print(one_round.hand_cards())
+                #self.profit += one_round.determine_profit()
+                #self.profit_list.append(self.profit)
+                self.rounds_played += 1
+                self.rounds_played_list.append(self.rounds_played)
 
 
+class Round:
+    def __init__(self, game: Game):
+        self.game = game
+        self.player_hand = [self.game.shoe.remove_card(), self.game.shoe.remove_card()]
+
+    def calculate_move(self):
+        pass
+
+    def determine_profit(self):
+        pass
+
+    def hand_cards(self):
+        return [i.get_name() for i in self.player_hand]
 
 
+class Player:
+    pass
+
+
+class Dealer:
+    pass
+
+
+blackjack = Game(1, 1, 0)
+blackjack.simulate()
