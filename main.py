@@ -47,7 +47,7 @@ class Shoe:
 
 
 class Game:
-    def __init__(self, rounds_to_play, num_of_decks, deck_penetration):
+    def __init__(self, rounds_to_play, num_of_decks, deck_penetration, five_card_win):
         self.profit = 0
         self.profit_list = []
         self.rounds_to_play = rounds_to_play
@@ -56,6 +56,7 @@ class Game:
         self.shoe = Shoe(num_of_decks)
         self.num_of_decks = num_of_decks
         self.deck_penetration = deck_penetration
+        self.five_card_win = five_card_win
 
     def simulate(self):
         while self.rounds_played < self.rounds_to_play:
@@ -63,7 +64,7 @@ class Game:
             while self.rounds_played < self.rounds_to_play and self.shoe.get_length_of_shoe() > self.num_of_decks * 52 \
                     * self.deck_penetration:
                 one_round = Round(self)
-                print(one_round.hand_cards())
+                print(one_round.player.get_hand_names())
                 print(self.shoe.get_length_of_shoe())
                 # self.profit += one_round.determine_profit()
                 # self.profit_list.append(self.profit)
@@ -74,25 +75,100 @@ class Game:
 class Round:
     def __init__(self, game: Game):
         self.game = game
-        self.player_hand = [self.game.shoe.remove_card(), self.game.shoe.remove_card()]
+        self.bet = self.calculate_bet()
+        self.player = Player(self, self.bet)
+        self.dealer = Dealer(self)
+        self.first_move = True
+
+
+
+    def calculate_bet(self):
+        return 1
+
+    def win(self):
+        pass
+
+    def lose(self):
+        pass
+
+    def draw(self):
+        pass
+
+    def blackjack_win(self):
+        pass
+
+    def surrender(self):
+        pass
+
+    def split(self):
+        pass
+
+    def double(self):
+        pass
+
+    def hit(self):
+        pass
+
+    def stand(self):
+        pass
 
     def calculate_move(self):
-        pass
+        while True:
+            if self.player.get_hand_value() == 21 and self.first_move:
+                self.blackjack_win()
+                print("blackjack")
+
+            elif self.player.get_hand_value() > 21:
+                self.lose()
+                print("lose")
+
+            elif (self.player.get_hand_value() == 21) or (self.player.get_hand_length() > 4 and self.game.five_card_win):
+                self.win()
+                print("win")
+
+            elif ((self.player.get_hand_value() == 16 and self.dealer.get_hand_value() > 8) or
+                  (self.player.get_hand_value() == 15 and self.dealer.get_hand_value() == 10)) and self.first_move:
+                self.surrender()
+                print("surrender")
+
+            elif self.player.splittable() and totals[self.player.hand[0].get_value() + 16]\
+                [self.dealer.get_hand_value() -1] == "y" and self.first_move:
+                self.first_move = False
+                self.split()
+
+
+
 
     def determine_profit(self):
         pass
 
-    def hand_cards(self):
-        return [i.get_name() for i in self.player_hand]
-
 
 class Player:
-    pass
+    def __init__(self, round: Round, bet):
+        self.round = round
+        self.hand = [self.round.game.shoe.remove_card(), self.round.game.shoe.remove_card()]
+        self.bet = bet
 
+    def get_hand_names(self):
+        return [i.get_name() for i in self.hand]
+
+    def get_hand_value(self):
+        return sum([i.get_value() for i in self.hand])
+
+    def get_hand_length(self):
+        return len(self.hand)
+
+    def splittable(self):
+        return self.hand[0].same_value(self.hand[1])
 
 class Dealer:
-    pass
+    def __init__(self, round: Round):
+        self.round = round
+        self.hand = [self.round.game.shoe.remove_card()]
+
+    def get_hand_value(self):
+        return sum([i.get_value() for i in self.hand])
 
 
-blackjack = Game(1, 1, 0.5)
+blackjack = Game(5, 1, 0.5, True)
 blackjack.simulate()

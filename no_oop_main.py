@@ -75,7 +75,7 @@ def do_moves(player_hand, dealer_hand, shoe, totals, bet, five_card_win, first_m
 
         elif ((return_value_of_hand(player_hand) == 16 and return_value_of_hand(
                 dealer_hand) > 8) or (
-                      return_value_of_hand(player_hand) == 15 and return_value_of_hand(dealer_hand) == 15)) \
+                      return_value_of_hand(player_hand) == 15 and return_value_of_hand(dealer_hand) == 10)) \
                 and first_move:
             surrender(bet)
             print(player_hand, dealer_hand)
