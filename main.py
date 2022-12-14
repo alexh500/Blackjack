@@ -1,5 +1,6 @@
 import random
 import csv
+import matplotlib.pyplot as plt
 
 totals_csv = open('Hard totals.csv', 'r')
 reader = csv.reader(totals_csv)
@@ -47,7 +48,7 @@ class Shoe:
 
 
 class Game:
-    def __init__(self, rounds_to_play, num_of_decks, deck_penetration, five_card_win):
+    def __init__(self, rounds_to_play, num_of_decks, deck_penetration, five_card_win, blackjack_payout):
         self.profit = 0
         self.profit_list = []
         self.rounds_to_play = rounds_to_play
@@ -57,6 +58,7 @@ class Game:
         self.num_of_decks = num_of_decks
         self.deck_penetration = deck_penetration
         self.five_card_win = five_card_win
+        self.blackjack_payout = blackjack_payout
 
     def simulate(self):
         while self.rounds_played < self.rounds_to_play:
@@ -64,10 +66,11 @@ class Game:
             while self.rounds_played < self.rounds_to_play and self.shoe.get_length_of_shoe() > self.num_of_decks * 52 \
                     * self.deck_penetration:
                 one_round = Round(self)
-                print(one_round.player.get_hand_names())
-                print(self.shoe.get_length_of_shoe())
-                # self.profit += one_round.determine_profit()
-                # self.profit_list.append(self.profit)
+                print(one_round.player.get_hand_names(), one_round.dealer.get_hand_names())
+                one_round.calculate_move()
+                print(one_round.profit)
+                self.profit += one_round.profit
+                self.profit_list.append(self.profit)
                 self.rounds_played += 1
                 self.rounds_played_list.append(self.rounds_played)
 
@@ -79,6 +82,7 @@ class Round:
         self.player = Player(self, self.bet)
         self.dealer = Dealer(self)
         self.first_move = True
+        self.profit = 0
 
 
 
@@ -86,55 +90,93 @@ class Round:
         return 1
 
     def win(self):
-        pass
+        self.profit = self.bet
 
     def lose(self):
-        pass
+        self.profit = -self.bet
 
     def draw(self):
-        pass
+        self.profit = 0
 
     def blackjack_win(self):
-        pass
+        self.profit = self.bet * self.game.blackjack_payout
 
     def surrender(self):
-        pass
+        self.profit = -self.bet * 0.5
 
     def split(self):
         pass
 
     def double(self):
-        pass
+        self.bet *= 2
+        self.player.hand.append(self.game.shoe.remove_card())
+        self.stand()
 
     def hit(self):
-        pass
+        self.player.hand.append(self.game.shoe.remove_card())
+        return
 
     def stand(self):
-        pass
+        while self.dealer.get_hand_value() < 17:
+            self.dealer.hand.append(self.game.shoe.remove_card())
+
+        if self.dealer.get_hand_value() > 21 or self.dealer.get_hand_value() < self.player.get_hand_value():
+            self.win()
+
+        elif self.dealer.get_hand_value() > self.player.get_hand_value():
+            self.lose()
+
+        else:
+            self.draw()
+
 
     def calculate_move(self):
         while True:
             if self.player.get_hand_value() == 21 and self.first_move:
                 self.blackjack_win()
-                print("blackjack")
+                print("blackjack", self.player.get_hand_names(), self.dealer.get_hand_names())
+                return
 
             elif self.player.get_hand_value() > 21:
                 self.lose()
-                print("lose")
+                print("lose", self.player.get_hand_names(), self.dealer.get_hand_names())
+                return
 
-            elif (self.player.get_hand_value() == 21) or (self.player.get_hand_length() > 4 and self.game.five_card_win):
+            elif (self.player.get_hand_value() == 21) or \
+                    (self.player.get_hand_length() > 4 and self.game.five_card_win):
                 self.win()
-                print("win")
+                print("win", self.player.get_hand_names(), self.dealer.get_hand_names())
+                return
 
             elif ((self.player.get_hand_value() == 16 and self.dealer.get_hand_value() > 8) or
                   (self.player.get_hand_value() == 15 and self.dealer.get_hand_value() == 10)) and self.first_move:
                 self.surrender()
-                print("surrender")
+                print("surrender", self.player.get_hand_names(), self.dealer.get_hand_names())
+                return
 
             elif self.player.splittable() and totals[self.player.hand[0].get_value() + 16]\
                 [self.dealer.get_hand_value() -1] == "y" and self.first_move:
                 self.first_move = False
                 self.split()
+                print("split", self.player.get_hand_names(), self.dealer.get_hand_names())
+
+            elif totals[self.player.get_hand_value() - 7][self.dealer.get_hand_value() - 1] == "d" and self.first_move:
+                self.double()
+                print("double", self.player.get_hand_names(), self.dealer.get_hand_names())
+                return
+
+            elif self.player.get_hand_value() > 16 or \
+                    totals[self.player.get_hand_value() - 7][self.dealer.get_hand_value() - 1] == "s":
+                self.stand()
+                print("stand", self.player.get_hand_names(), self.dealer.get_hand_names())
+                return
+
+            elif self.player.get_hand_value() < 9 or \
+                    totals[self.player.get_hand_value() - 7][self.dealer.get_hand_value() - 1] == "h":
+                self.first_move = False
+                self.hit()
+                print("hit", self.player.get_hand_names(), self.dealer.get_hand_names())
+
 
 
 
@@ -169,6 +211,12 @@ class Dealer:
     def get_hand_value(self):
         return sum([i.get_value() for i in self.hand])
 
+    def get_hand_names(self):
+        return [i.get_name() for i in self.hand]
 
-blackjack = Game(5, 1, 0.5, True)
+
+blackjack = Game(1000, 8, 0.5, True, 1.5)
 blackjack.simulate()
+print(blackjack.profit_list)
+plt.plot(blackjack.rounds_played_list, blackjack.profit_list)
+plt.show()
