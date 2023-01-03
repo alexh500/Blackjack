@@ -24,6 +24,9 @@ class Card:
     def same_value(self, other):
         return self.value == other.value
 
+    def same_name(self, other):
+        return self.name == other.name
+
     def get_name(self):
         return self.name
 
@@ -66,10 +69,8 @@ class Game:
             while self.rounds_played < self.rounds_to_play and self.shoe.get_length_of_shoe() > self.num_of_decks * 52 \
                     * self.deck_penetration:
                 one_round = Round(self)
-                print(one_round.player.get_hand_names(), one_round.dealer.get_hand_names())
-                one_round.calculate_move()
-                print(one_round.profit)
-                self.profit += one_round.profit
+                self.profit += one_round.determine_profit()
+                print(one_round.determine_profit())
                 self.profit_list.append(self.profit)
                 self.rounds_played += 1
                 self.rounds_played_list.append(self.rounds_played)
@@ -78,130 +79,172 @@ class Game:
 class Round:
     def __init__(self, game: Game):
         self.game = game
-        self.bet = self.calculate_bet()
+        self.finished = False
+        self.hands_played = 0
+        self.bet = 1
         self.player = Player(self, self.bet)
         self.dealer = Dealer(self)
-        self.first_move = True
-        self.profit = 0
+        self.player.deal_hand()
+
+        while not self.finished:
+            self.player.calculate_move(self.hands_played)
+            self.hands_played += 1
+            if self.hands_played == len(self.player.hand_list):
+                self.finished = True
+
+        if "stand" in self.player.last_move_list:
+            self.deal_dealer_cards()
+            self.determine_winner()
+
+        self.determine_profit()
+
+        for i in range(0, len(self.player.hand_list)):
+            print(f"Player hand: {self.player.get_hand_names(i)}")
+        print(f"Dealer hand:{self.dealer.get_hand_names()}\n")
+        print(f"Profit list: {self.player.profit_list_of_hands}")
 
 
+    """def calculate_bet(self):
+        return 1"""
 
-    def calculate_bet(self):
-        return 1
+    def determine_profit(self):
+        return sum(self.player.profit_list_of_hands)
 
-    def win(self):
-        self.profit = self.bet
-
-    def lose(self):
-        self.profit = -self.bet
-
-    def draw(self):
-        self.profit = 0
-
-    def blackjack_win(self):
-        self.profit = self.bet * self.game.blackjack_payout
-
-    def surrender(self):
-        self.profit = -self.bet * 0.5
-
-    def split(self):
-        pass
-
-    def double(self):
-        self.bet *= 2
-        self.player.hand.append(self.game.shoe.remove_card())
-        self.stand()
-
-    def hit(self):
-        self.player.hand.append(self.game.shoe.remove_card())
-        return
-
-    def stand(self):
+    def deal_dealer_cards(self):
         while self.dealer.get_hand_value() < 17:
             self.dealer.hand.append(self.game.shoe.remove_card())
 
-        if self.dealer.get_hand_value() > 21 or self.dealer.get_hand_value() < self.player.get_hand_value():
-            self.win()
+    def determine_winner(self):
+        for hand_num in range(0,len(self.player.hand_list)):
+            if self.player.last_move_list[hand_num] != "stand":
+                continue
 
-        elif self.dealer.get_hand_value() > self.player.get_hand_value():
-            self.lose()
+            elif self.dealer.get_hand_value() == 21:
+                self.player.lose()
 
-        else:
-            self.draw()
+            elif self.dealer.get_hand_value() > 21:
+                self.player.win()
 
+            elif self.dealer.get_hand_value() > self.player.get_hand_value(hand_num):
+                self.player.lose()
 
-    def calculate_move(self):
-        while True:
-            if self.player.get_hand_value() == 21 and self.first_move:
-                self.blackjack_win()
-                print("blackjack", self.player.get_hand_names(), self.dealer.get_hand_names())
-                return
+            elif self.dealer.get_hand_value() < self.player.get_hand_value(hand_num):
+                self.player.win()
 
-            elif self.player.get_hand_value() > 21:
-                self.lose()
-                print("lose", self.player.get_hand_names(), self.dealer.get_hand_names())
-                return
+            else:
+                self.player.draw()
 
-            elif (self.player.get_hand_value() == 21) or \
-                    (self.player.get_hand_length() > 4 and self.game.five_card_win):
-                self.win()
-                print("win", self.player.get_hand_names(), self.dealer.get_hand_names())
-                return
-
-            elif ((self.player.get_hand_value() == 16 and self.dealer.get_hand_value() > 8) or
-                  (self.player.get_hand_value() == 15 and self.dealer.get_hand_value() == 10)) and self.first_move:
-                self.surrender()
-                print("surrender", self.player.get_hand_names(), self.dealer.get_hand_names())
-                return
-
-            elif self.player.splittable() and totals[self.player.hand[0].get_value() + 16]\
-                [self.dealer.get_hand_value() -1] == "y" and self.first_move:
-                self.first_move = False
-                self.split()
-                print("split", self.player.get_hand_names(), self.dealer.get_hand_names())
-
-            elif totals[self.player.get_hand_value() - 7][self.dealer.get_hand_value() - 1] == "d" and self.first_move:
-                self.double()
-                print("double", self.player.get_hand_names(), self.dealer.get_hand_names())
-                return
-
-            elif self.player.get_hand_value() > 16 or \
-                    totals[self.player.get_hand_value() - 7][self.dealer.get_hand_value() - 1] == "s":
-                self.stand()
-                print("stand", self.player.get_hand_names(), self.dealer.get_hand_names())
-                return
-
-            elif self.player.get_hand_value() < 9 or \
-                    totals[self.player.get_hand_value() - 7][self.dealer.get_hand_value() - 1] == "h":
-                self.first_move = False
-                self.hit()
-                print("hit", self.player.get_hand_names(), self.dealer.get_hand_names())
-
-
-
-
-
-    def determine_profit(self):
-        pass
 
 
 class Player:
     def __init__(self, round: Round, bet):
         self.round = round
-        self.hand = [self.round.game.shoe.remove_card(), self.round.game.shoe.remove_card()]
+        self.hand_list = []
         self.bet = bet
+        self.first_move = True
+        self.profit_list_of_hands = []
+        self.last_move_list = []
 
-    def get_hand_names(self):
-        return [i.get_name() for i in self.hand]
+    def deal_hand(self):
+        self.hand_list.append([self.round.game.shoe.remove_card(), self.round.game.shoe.remove_card()])
 
-    def get_hand_value(self):
-        return sum([i.get_value() for i in self.hand])
+    def deal_hand_split(self, hand):
+        self.hand_list.append([self.hand_list[hand][0], self.round.game.shoe.remove_card()])
+        self.hand_list[hand] = [self.hand_list[hand][0], self.round.game.shoe.remove_card()]
 
-    def get_hand_length(self):
-        return len(self.hand)
+    def win(self):
+        self.profit_list_of_hands.append(self.bet)
 
-    def splittable(self):
-        return self.hand[0].same_value(self.hand[1])
+
+    def lose(self):
+        self.profit_list_of_hands.append(-self.bet)
+
+
+    def draw(self):
+        self.profit_list_of_hands.append(0)
+
+    def blackjack_win(self):
+        self.profit_list_of_hands.append(self.bet * self.round.game.blackjack_payout)
+
+    def surrender(self):
+        self.profit_list_of_hands.append(-self.bet * 0.5)
+
+    def split(self, hand):
+        self.deal_hand_split(hand)
+
+    def double(self, hand):
+        self.bet *= 2
+        self.hand_list[hand].append(self.round.game.shoe.remove_card())
+
+    def hit(self, hand):
+        self.hand_list[hand].append(self.round.game.shoe.remove_card())
+
+
+    def calculate_move(self, hand):
+        self.first_move = True
+        while True:
+            if self.get_hand_value(hand) == 21 and self.first_move:
+                self.blackjack_win()
+                print("blackjack", self.get_hand_names(hand), self.round.dealer.get_hand_names())
+                self.last_move_list.append("blackjack")
+                return
+
+            elif self.get_hand_value(hand) > 21:
+                self.lose()
+                print("lose", self.get_hand_names(hand), self.round.dealer.get_hand_names())
+                self.last_move_list.append("blackjack")
+                return
+
+            elif (self.get_hand_value(hand) == 21) or \
+                    (self.get_hand_length(hand) > 4 and self.round.game.five_card_win):
+                self.win()
+                print("win", self.get_hand_names(hand), self.round.dealer.get_hand_names())
+                self.last_move_list.append("blackjack")
+                return
+
+            elif ((self.get_hand_value(hand) == 16 and self.round.dealer.get_hand_value() > 8) or
+                  (self.get_hand_value(hand) == 15 and self.round.dealer.get_hand_value() == 10)) and self.first_move:
+                print("surrender", self.get_hand_names(hand), self.round.dealer.get_hand_names())
+                self.surrender()
+                self.last_move_list.append("blackjack")
+                return
+
+            elif self.splittable(hand) and totals[self.hand_list[hand][0].get_value() + 16]\
+                [self.round.dealer.get_hand_value() -1] == "y":
+                print("split", self.get_hand_names(hand), self.round.dealer.get_hand_names())
+                self.split(hand)
+
+
+            elif totals[self.get_hand_value(hand) - 7][self.round.dealer.get_hand_value() - 1] == "d" and self.first_move:
+                print("double", self.get_hand_names(hand), self.round.dealer.get_hand_names())
+                self.double(hand)
+                self.last_move_list.append("stand")
+                return
+
+            elif self.get_hand_value(hand) > 16 or \
+                    totals[self.get_hand_value(hand) - 7][self.round.dealer.get_hand_value() - 1] == "s":
+                print("stand", self.get_hand_names(hand), self.round.dealer.get_hand_names())
+                self.last_move_list.append("stand")
+                return
+
+            else:
+                self.first_move = False
+                print("hit", self.get_hand_names(hand), self.round.dealer.get_hand_names())
+                self.hit(hand)
+
+
+    def get_hand_names(self, hand):
+        return [i.get_name() for i in self.hand_list[hand]]
+
+    def get_hand_value(self, hand):
+        return sum([i.get_value() for i in self.hand_list[hand]])
+
+    def get_hand_length(self, hand):
+        return len(self.hand_list[hand])
+
+    def splittable(self, hand):
+        return self.hand_list[hand][0].same_name(self.hand_list[hand][1])
+
 
 class Dealer:
     def __init__(self, round: Round):
@@ -210,12 +253,15 @@ class Dealer:
 
     def get_hand_value(self):
         return sum([i.get_value() for i in self.hand])
+    def get_card_value(self, index):
+        return self.hand[index].get_value()
 
     def get_hand_names(self):
         return [i.get_name() for i in self.hand]
 
 
-blackjack = Game(1000, 8, 0.5, True, 1.5)
+
+blackjack = Game(100000, 8, 0.5, False, 1.5)
 blackjack.simulate()
 print(blackjack.profit_list)
 plt.plot(blackjack.rounds_played_list, blackjack.profit_list)
