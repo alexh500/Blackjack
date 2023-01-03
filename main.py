@@ -70,7 +70,6 @@ class Game:
                     * self.deck_penetration:
                 one_round = Round(self)
                 self.profit += one_round.determine_profit()
-                print(one_round.determine_profit())
                 self.profit_list.append(self.profit)
                 self.rounds_played += 1
                 self.rounds_played_list.append(self.rounds_played)
@@ -81,38 +80,56 @@ class Round:
         self.game = game
         self.finished = False
         self.hands_played = 0
-        self.bet = 1
-        self.player = Player(self, self.bet)
+        self.bet_calc = self.calculate_bet()
+        self.player = Player(self, self.bet_calc)
         self.dealer = Dealer(self)
+        self.dealer_hand_value = self.dealer.get_hand_value()
         self.player.deal_hand()
 
         while not self.finished:
-            self.player.bet = 1
+            self.player.bet = self.bet_calc
             self.player.calculate_move(self.hands_played)
             self.hands_played += 1
             if self.hands_played == len(self.player.hand_list):
                 self.finished = True
 
-        if "stand" or "double" in self.player.last_move_list:
+        if "stand" in self.player.last_move_list or "double" in self.player.last_move_list:
             self.deal_dealer_cards()
 
         self.determine_winner()
 
         for i in range(0, len(self.player.hand_list)):
             print(f"Player hand: {self.player.get_hand_names(i)}")
-        print(f"Dealer hand:{self.dealer.get_hand_names()}\n")
-        print(f"Profit list: {self.player.profit_list_of_hands}")
+        print(f"Dealer hand:{self.dealer.get_hand_names()}")
+        print(f"Profit list: {self.player.profit_list_of_hands}\n")
 
-
-    """def calculate_bet(self):
-        return 1"""
+    def calculate_bet(self):
+        return 1
 
     def determine_profit(self):
         return sum(self.player.profit_list_of_hands)
 
     def deal_dealer_cards(self):
-        while self.dealer.get_hand_value() < 17:
+        if self.dealer.get_card_value(-1) == 11:
+            aces = 1
+        else:
+            aces = 0
+        while self.dealer_hand_value < 17:
             self.dealer.hand.append(self.game.shoe.remove_card())
+            if self.dealer.get_card_value(-1) == 11:
+                aces += 1
+            if aces > 1:
+                self.dealer_hand_value = self.dealer.get_hand_value() - 10 * (aces -1)
+            else:
+                self.dealer_hand_value = self.dealer.get_hand_value()
+
+            if self.dealer.get_hand_value() > 21 and aces > 0:
+                self.dealer_hand_value = self.dealer.get_hand_value() - 10 * aces
+        print(self.dealer_hand_value)
+
+
+
+
 
     def determine_winner(self):
         for hand_num in range(0,len(self.player.hand_list)):
