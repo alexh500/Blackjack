@@ -1,6 +1,7 @@
 import random
 import csv
 import matplotlib.pyplot as plt
+import math
 
 totals_csv = open('Hard totals.csv', 'r')
 reader = csv.reader(totals_csv)
@@ -9,6 +10,12 @@ for row in reader:
     totals.append(row)
 totals_csv.close()
 
+illustrous_18_csv = open('illustrious_18.csv', 'r')
+reader = csv.reader(illustrous_18_csv)
+illustrous_18 = []
+for row in reader:
+    illustrous_18.append(row)
+illustrous_18_csv.close()
 
 class Card:
     values = {"1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9,
@@ -32,9 +39,12 @@ class Card:
 
 
 class Shoe:
-    def __init__(self, num_of_decks):
+    def __init__(self, num_of_decks, game):
         self.num_of_decks = num_of_decks
+        self.game = game
         names = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king", "ace"]
+        self.count_value = {"2": 1, "3": 1, "4": 1, "5": 1, "6": 1, "7": 0, "8": 0, "9": 0,
+                       "10": -1, "jack": -1, "queen": -1, "king": -1, "ace": -1}
         self.deck = []
         for k in range(0, self.num_of_decks):
             for i in range(0, 4):
@@ -44,6 +54,8 @@ class Shoe:
 
     def remove_card(self):
         card = self.deck.pop()
+        self.game.running_count += self.count_value[card.get_name()]
+        self.game.true_count = self.game.running_count // (math.ceil(self.get_length_of_shoe() / 52))
         return card
 
     def get_length_of_shoe(self):
@@ -51,21 +63,24 @@ class Shoe:
 
 
 class Game:
-    def __init__(self, rounds_to_play, num_of_decks, deck_penetration, five_card_win, blackjack_payout):
+    def __init__(self, rounds_to_play, num_of_decks, deck_penetration, five_card_win, blackjack_payout, card_counting):
         self.profit = 0
         self.profit_list = []
         self.rounds_to_play = rounds_to_play
         self.rounds_played = 0
         self.rounds_played_list = []
-        self.shoe = Shoe(num_of_decks)
+        self.shoe = Shoe(num_of_decks, self)
         self.num_of_decks = num_of_decks
         self.deck_penetration = deck_penetration
         self.five_card_win = five_card_win
         self.blackjack_payout = blackjack_payout
+        self.card_counting = card_counting
+        self.running_count = 0
+        self.true_count = self.running_count//(math.ceil(self.shoe.get_length_of_shoe()/52))
 
     def simulate(self):
         while self.rounds_played < self.rounds_to_play:
-            self.shoe = Shoe(self.num_of_decks)
+            self.shoe = Shoe(self.num_of_decks, self)
             while self.rounds_played < self.rounds_to_play and self.shoe.get_length_of_shoe() > self.num_of_decks * 52 \
                     * self.deck_penetration:
                 one_round = Round(self)
@@ -202,6 +217,10 @@ class Player:
     def calculate_move(self, hand):
         self.first_move = True
         while True:
+            if self.round.game.card_counting:
+                self.check_card_counting_moves()
+
+
             if self.get_hand_value(hand) == 21 and self.first_move:
                 print("blackjack", self.get_hand_names(hand), self.round.dealer.get_hand_names())
                 self.last_move_list.append("blackjack")
@@ -265,6 +284,9 @@ class Player:
     def splittable(self, hand):
         return self.hand_list[hand][0].same_name(self.hand_list[hand][1])
 
+    def check_card_counting_moves(self):
+        print(illustrous_18)
+
 
 class Dealer:
     def __init__(self, round: Round):
@@ -281,7 +303,7 @@ class Dealer:
 
 
 
-blackjack = Game(1000, 8, 0.5, False, 1.5)
+blackjack = Game(1000, 8, 0.5, False, 1.5, True)
 blackjack.simulate()
 print(blackjack.profit_list)
 plt.plot(blackjack.rounds_played_list, blackjack.profit_list)
