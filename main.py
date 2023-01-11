@@ -2,9 +2,10 @@ import csv
 import random
 import math
 from tkinter import font
-
-import matplotlib.pyplot as plt
 from tkinter import *
+import matplotlib.pyplot as plt
+import pandas as pd
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 totals_csv = open('Hard totals.csv', 'r')
 reader = csv.reader(totals_csv)
@@ -83,6 +84,16 @@ class Game:
         self.card_counting = card_counting
         self.running_count = 0
         self.true_count = self.running_count//(math.ceil(self.shoe.get_length_of_shoe()/52))
+        self.hands_won = 0
+        self.hands_drew = 0
+        self.hands_lost = 0
+        self.hands_surrendered = 0
+        self.hands_blackjack = 0
+        self.hands_21 = 0
+        self.hands_bust = 0
+        self.hands_player_beat_dealer = 0
+        self.hands_dealer_beat_player = 0
+        self.hands_dealer_bust = 0
 
     def simulate(self):
         while self.rounds_played < self.rounds_to_play:
@@ -97,7 +108,16 @@ class Game:
                 self.count_list.append(self.true_count)
                 self.rounds_played += 1
                 self.rounds_played_list.append(self.rounds_played)
-
+                self.hands_won += one_round.player.hand_status.count("w") + one_round.player.hand_status.count("b")
+                self.hands_lost += one_round.player.hand_status.count("l") + one_round.player.hand_status.count("s")
+                self.hands_drew += one_round.player.hand_status.count("d")
+                self.hands_surrendered += one_round.player.hand_status.count("s")
+                self.hands_blackjack += one_round.player.hand_status.count("b")
+                self.hands_21 += one_round.player.hand_status.count("21")
+                self.hands_bust += one_round.player.hand_status.count("bust")
+                self.hands_player_beat_dealer += one_round.player.hand_status.count("player>dealer")
+                self.hands_dealer_beat_player += one_round.player.hand_status.count("dealer>player")
+                self.hands_dealer_bust += one_round.player.hand_status.count("dealer_bust")
 
 class Round:
     def __init__(self, game: Game):
@@ -130,7 +150,7 @@ class Round:
     def calculate_bet(self):
         if not self.game.card_counting or self.game.true_count <= 0:
             return 1
-        return self.game.true_count
+        return int(self.game.true_count)
 
 
     def determine_profit(self):
@@ -164,8 +184,10 @@ class Round:
                 self.player.blackjack_win()
             elif self.player.last_move_list[hand_num] == "bust":
                 self.player.lose(False)
+                self.player.hand_status.append("bust")
             elif self.player.last_move_list[hand_num] == "21":
                 self.player.win(False)
+                self.player.hand_status.append("21")
             elif self.player.last_move_list[hand_num] == "surrender":
                 self.player.surrender()
             elif self.player.last_move_list[hand_num] == "double":
@@ -173,11 +195,18 @@ class Round:
             else:
                 self.compare_to_dealer(hand_num, False)
     def compare_to_dealer(self, hand_num, double):
-        if self.dealer.get_hand_value() > 21 or self.dealer.get_hand_value() < self.player.get_hand_value(hand_num) \
-                or self.player.get_hand_value(hand_num) == 21:
+        if self.player.get_hand_value(hand_num) == 21:
             self.player.win(double)
+            self.player.hand_status.append("21")
+        elif self.dealer.get_hand_value() > 21:
+            self.player.win(double)
+            self.player.hand_status.append("dealer_bust")
+        elif self.dealer.get_hand_value() < self.player.get_hand_value(hand_num):
+            self.player.win(double)
+            self.player.hand_status.append("player>dealer")
         elif self.dealer.get_hand_value() > self.player.get_hand_value(hand_num):
             self.player.lose(double)
+            self.player.hand_status.append("dealer>player")
         else:
             self.player.draw()
 
@@ -189,6 +218,7 @@ class Player:
         self.first_move = True
         self.profit_list_of_hands = []
         self.last_move_list = []
+        self.hand_status = []
 
     def deal_hand(self):
         self.hand_list.append([self.round.game.shoe.remove_card(), self.round.game.shoe.remove_card()])
@@ -202,6 +232,7 @@ class Player:
             self.profit_list_of_hands.append(self.bet * 2)
         else:
             self.profit_list_of_hands.append(self.bet)
+        self.hand_status.append("w")
 
 
     def lose(self, double):
@@ -209,16 +240,22 @@ class Player:
             self.profit_list_of_hands.append(-self.bet * 2)
         else:
             self.profit_list_of_hands.append(-self.bet)
+        self.hand_status.append("l")
 
 
     def draw(self):
         self.profit_list_of_hands.append(0)
+        self.hand_status.append("d")
 
     def blackjack_win(self):
         self.profit_list_of_hands.append(self.bet * self.round.game.blackjack_payout)
+        self.hand_status.append("b")
+
 
     def surrender(self):
         self.profit_list_of_hands.append(-self.bet * 0.5)
+        self.hand_status.append("s")
+
 
     def split(self, hand):
         self.deal_hand_split(hand)
@@ -337,32 +374,32 @@ class GUI:
         strategy = ["Basic Strategy", "Card Counting"]
         five_card_win = ["Yes", "No"]
         blackjack_payout = ["3:2", "2:1", "6:5"]
-        helv32 = font.Font(family = "Helvetica", size = 32)
+        helv28 = font.Font(family = "Helvetica", size = 28)
         helv20 = font.Font(family = "Helvetica", size = 20)
         self.rounds_to_play_variable = StringVar()
         self.decks_variable = StringVar()
         self.deck_penetration_variable = StringVar()
 
-        self.rounds_to_play_label = Label(master, text = "Rounds to Play", font = ("Helvetica", 32))
-        self.rounds_to_play_option = Entry(master, textvariable= self.rounds_to_play_variable, font = ("Helvetica", 32))
+        self.rounds_to_play_label = Label(master, text = "Rounds to Play", font = helv28)
+        self.rounds_to_play_option = Entry(master, textvariable= self.rounds_to_play_variable, font = helv28)
         self.rounds_to_play_label.grid(row = 0, column = 0)
         self.rounds_to_play_option.grid(row = 0, column = 1)
 
-        self.decks_label = Label(master, text="Decks", font = ("Helvetica", 32))
-        self.decks_option = Entry(master, textvariable=self.decks_variable, font = ("Helvetica", 32))
+        self.decks_label = Label(master, text="Decks", font = helv28)
+        self.decks_option = Entry(master, textvariable=self.decks_variable, font = helv28)
         self.decks_label.grid(row=1, column=0)
         self.decks_option.grid(row=1, column=1)
 
-        self.deck_penetration_label = Label(master, text="Deck Penetration", font = ("Helvetica", 32))
+        self.deck_penetration_label = Label(master, text="Deck Penetration", font = helv28)
         self.deck_penetration_option = Entry(master, textvariable=self.deck_penetration_variable,
-                                             font = ("Helvetica", 32))
+                                             font = helv28)
         self.deck_penetration_label.grid(row=2, column=0)
         self.deck_penetration_option.grid(row=2, column=1)
 
         self.card_counting_variable = StringVar(master)
         self.card_counting_variable.set(strategy[0])
         self.card_counting_option = OptionMenu(master, self.card_counting_variable, *strategy)
-        self.card_counting_option.config(font = helv32)
+        self.card_counting_option.config(font = helv28)
         self.card_counting_menu = root.nametowidget(self.card_counting_option.menuname)
         self.card_counting_menu.config(font = helv20)
         self.card_counting_option.grid(row = 0, column = 2)
@@ -370,7 +407,7 @@ class GUI:
         self.five_card_win_variable = StringVar(master)
         self.five_card_win_variable.set(five_card_win[0])
         self.five_card_win_option = OptionMenu(master, self.five_card_win_variable, *five_card_win)
-        self.five_card_win_option.config(font = helv32)
+        self.five_card_win_option.config(font = helv28)
         self.five_card_win_menu = root.nametowidget(self.five_card_win_option.menuname)
         self.five_card_win_menu.config(font=helv20)
         self.five_card_win_option.grid(row = 1, column = 2)
@@ -378,24 +415,26 @@ class GUI:
         self.blackjack_payout_variable = StringVar(master)
         self.blackjack_payout_variable.set(blackjack_payout[0])
         self.blackjack_payout_option = OptionMenu(master, self.blackjack_payout_variable, *blackjack_payout)
-        self.blackjack_payout_option.config(font=helv32)
+        self.blackjack_payout_option.config(font=helv28)
         self.blackjack_payout_menu = root.nametowidget(self.blackjack_payout_option.menuname)
         self.blackjack_payout_menu.config(font=helv20)
         self.blackjack_payout_option.grid(row = 2, column = 2)
 
-        self.run_button = Button(master, text="Simulate", command=self.start_simulation, font = ("Helvetica", 32))
-        self.run_button.grid(row = 5, column = 1)
+        self.run_button = Button(master, text="Simulate", command = lambda: self.start_simulation(master, helv28)
+                                 , font = helv28)
+        self.run_button.grid(row = 8, column = 1)
 
-        self.close_button = Button(master, text="Close", command=master.quit, font = ("Helvetica", 32))
-        self.close_button.grid(row = 5, column = 0)
+        self.close_button = Button(master, text="Close", command=master.quit, font = helv28)
+        self.close_button.grid(row = 8, column = 0)
 
-    def start_simulation(self):
+    def start_simulation(self, master, helv28):
         blackjack = Game(self.round_number_func(), self.number_of_decks_func(), self.deck_penetration_func(),
                          self.five_card_win_func(), self.blackjack_payout_func(), self.card_counting_func())
         #print(card_counting_variable, blackjack_payout_variable, five_card_win_variable)
         blackjack.simulate()
-        self.profit_graph(blackjack)
-        self.count_graph(blackjack)
+        self.profit_graph(blackjack, master)
+        self.count_graph(blackjack, master)
+        self.output_info(blackjack, master, helv28)
 
     def round_number_func(self):
         return int(self.rounds_to_play_variable.get())
@@ -419,27 +458,54 @@ class GUI:
             return True
         else:
             return False
-    def profit_graph(self, blackjack):
-        x = blackjack.rounds_played_list
-        y = blackjack.profit_list
-        plt.title("Profit Graph")
-        plt.xlabel("Round")
-        plt.ylabel("Profit")
-        plt.plot(x, y, linewidth = 0.5)
-        plt.show()
+    def profit_graph(self, blackjack, master):
+        data = pd.DataFrame({"Round": blackjack.rounds_played_list, "Profit": blackjack.profit_list})
+        profit_graph = plt.Figure(figsize = (6, 5), dpi = 100)
+        ax1 = profit_graph.add_subplot(111)
+        line1 = FigureCanvasTkAgg(profit_graph, master)
+        line1.get_tk_widget().grid(row = 5, column = 5)
+        data = data[["Round", "Profit"]].groupby("Round").sum()
+        data.plot(kind = "line", legend = True, ax = ax1, color = "r", fontsize = 10)
+        ax1.set_title("Round vs Profit")
+    def count_graph(self, blackjack, master):
+        data = pd.DataFrame({"Round": blackjack.rounds_played_list, "Count": blackjack.count_list})
+        count_graph = plt.Figure(figsize= (6, 5), dpi=100)
+        ax1 = count_graph.add_subplot(111)
+        line1 = FigureCanvasTkAgg(count_graph, master)
+        line1.get_tk_widget().grid(row = 10, column = 5)
+        data = data[["Round", "Count"]].groupby("Round").sum()
+        data.plot(kind = "line", legend = True, ax = ax1, color = "b", fontsize = 10, linewidth = 0.25)
+        ax1.set_title("Round vs Count")
 
-    def count_graph(self, blackjack):
-        x = blackjack.rounds_played_list
-        y = blackjack.count_list
-        plt.title("Count Graph")
-        plt.xlabel("Round")
-        plt.ylabel("Count")
-        plt.plot(x, y, linewidth = 0.25)
-        plt.show()
+    def output_info(self, blackjack, master, helv28):
+        final_profit_label = Label(master, text = f"Final profit: {blackjack.profit}", font = helv28)
+        final_profit_label.grid(row = 4, column = 0)
+        hands_won_label = Label(master, text = f"Hands won: {blackjack.hands_won}", font = helv28)
+        hands_won_label.grid(row = 5, column = 0)
+        hands_drew_label = Label(master, text=f"Hands drew: {blackjack.hands_drew}", font=helv28)
+        hands_drew_label.grid(row=5, column=1)
+        hands_lost_label = Label(master, text=f"Hands lost: {blackjack.hands_lost}", font=helv28)
+        hands_lost_label.grid(row=5, column=2)
+        hands_surrendered_label = Label(master, text=f"Hands surrendered: {blackjack.hands_surrendered}", font=helv28)
+        hands_surrendered_label.grid(row=5, column=3)
+        hands_blackjack_label = Label(master, text=f"Hands blackjack: {blackjack.hands_blackjack}", font=helv28)
+        hands_blackjack_label.grid(row=6, column=0)
+        hands_21_label = Label(master, text=f"Hands reached 21: {blackjack.hands_21}", font=helv28)
+        hands_21_label.grid(row=6, column=1)
+        hands_bust_label = Label(master, text=f"Hands bust: {blackjack.hands_bust}", font=helv28)
+        hands_bust_label.grid(row=6, column=2)
+        hands_player_beat_dealer_label = Label(master, text=f"Hands player closer to 21 than dealer: "
+                                                             f"{blackjack.hands_player_beat_dealer}", font=helv28)
+        hands_player_beat_dealer_label.grid(row=6, column=3)
+        hands_dealer_beat_player_label = Label(master, text=f"Hands dealer closer to 21 than player: "
+                                                            f"{blackjack.hands_dealer_beat_player}", font=helv28)
+        hands_dealer_beat_player_label.grid(row=7, column=0)
+        hands_dealer_bust_label = Label(master, text=f"Hands dealer bust: {blackjack.hands_dealer_bust}", font=helv28)
+        hands_dealer_bust_label.grid(row=7, column=1)
 
 
 root = Tk()
-root.geometry("1200x1200")
+root.geometry("2000x1250")
 gui = GUI(root)
 root.mainloop()
 
