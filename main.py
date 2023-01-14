@@ -1,7 +1,7 @@
 import csv
 import random
 import math
-from tkinter import font, Tk, Canvas, Button, Label, OptionMenu, Entry, StringVar
+from tkinter import font, Tk, Canvas, Button, Label, OptionMenu, Entry, StringVar, Toplevel, Message
 #from tkinter import *
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -475,7 +475,50 @@ class GUI:
             return False
 
     def help(self):
-        pass
+        help_window = Toplevel(self.master)
+        help_window.title("Help Window")
+        help_window.geometry("1000x500")
+
+        close_button = Button(help_window, text = "Close", command = help_window.destroy)
+        close_button.place(x = 5, y = 5)
+
+        text_box_input = Message(help_window, text = "Input parameters\nRounds: This is the number of rounds to be played"
+                                               "\nDecks: This is the number of decks to be used in the shoe\nShoe "
+                                               "Depth: This is how far the shoe should be played into before being "
+                                               "remade. The value is 0 to 1, where 1 means the shoe is fully played"
+                                               "\nStrategy: This has the options for the 2 ways of playing, basic "
+                                               "strategy or card counting which uses the high low system\n5 card win: "
+                                               "This is either yes or no and determines whether the rule of if the "
+                                               "player gets 5 cards and still is not bust they win is being played"
+                                               "\nBlackjack payout: This is where you can select one of the 3 most "
+                                               "common blackjack payout ratios in blackjack, 3:2, 6:5 or 2:1")
+        text_box_input.place(x= 50, y = 20)
+
+        text_box_output = Message(help_window, text = "Output data\nHands won: This shows the total number of hands won"
+                                                      " by the player\nHands drew: This shows the total number of hands"
+                                                      " drew by the player\nHands lose: This shows the total number of"
+                                                      " hands lost by the player\nHands blackjack: This shows the total"
+                                                      " number of blackjacks achieved by the player\nHands "
+                                                      "player>dealer: This shows the total number of times the player "
+                                                      "got close to 21 than the dealer\nHands dealer bust: This shows "
+                                                      "the total number of times the dealer went over 21\nHands "
+                                                      "surrendered: This shows the total number of times the player "
+                                                      "surrendered\nHands dealer>player: This shows the total number "
+                                                      "of times the dealer was closer to 21 than the player\nHands "
+                                                      "bust: This show the total number of times the player went over "
+                                                      "21\nFinal profit: This shows the overall profit that the player"
+                                                      " achieved throughout all the rounds")
+        text_box_output.place(x = 500, y = 20)
+
+        profit_graph_text = Label(help_window, text = "Profit graph\nThis graph shows on the x axis the round number"
+                                                      " and on the y axis the profit that the player has achieved at "
+                                                      "that point in the game")
+        profit_graph_text.place(x = 160, y = 300)
+
+        count_graph_text = Label(help_window, text="Count graph\nThis graph shows on the x axis the round number"
+                                                    " and on the y axis the true count at that point in the game")
+        count_graph_text.place(x=220, y=400)
+
     def profit_graph(self, blackjack, master):
         data = pd.DataFrame({"Round": blackjack.rounds_played_list, "Profit": blackjack.profit_list})
         profit_graph = plt.Figure(figsize = (6.7, 4.7), dpi = 100)
