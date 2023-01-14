@@ -1,8 +1,8 @@
 import csv
 import random
 import math
-from tkinter import font
-from tkinter import *
+from tkinter import font, Tk, Canvas, Button, Label, OptionMenu, Entry, StringVar
+#from tkinter import *
 import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -374,58 +374,73 @@ class GUI:
         strategy = ["Basic Strategy", "Card Counting"]
         five_card_win = ["Yes", "No"]
         blackjack_payout = ["3:2", "2:1", "6:5"]
-        helv28 = font.Font(family = "Helvetica", size = 28)
+        helv18 = font.Font(family = "Helvetica", size = 18)
         helv20 = font.Font(family = "Helvetica", size = 20)
         self.rounds_to_play_variable = StringVar()
         self.decks_variable = StringVar()
         self.deck_penetration_variable = StringVar()
+        """self.canvas = Canvas(self.master)
 
-        self.rounds_to_play_label = Label(master, text = "Rounds to Play", font = helv28)
-        self.rounds_to_play_option = Entry(master, textvariable= self.rounds_to_play_variable, font = helv28)
-        self.rounds_to_play_label.grid(row = 0, column = 0)
-        self.rounds_to_play_option.grid(row = 0, column = 1)
+        self.canvas.create_line(750, 0, 750, 1000)
+        self.canvas.place()"""
 
-        self.decks_label = Label(master, text="Decks", font = helv28)
-        self.decks_option = Entry(master, textvariable=self.decks_variable, font = helv28)
-        self.decks_label.grid(row=1, column=0)
-        self.decks_option.grid(row=1, column=1)
+        self.rounds_to_play_label = Label(master, text = "Rounds", font = helv18)
+        self.rounds_to_play_option = Entry(master, textvariable= self.rounds_to_play_variable, font = helv18)
+        self.rounds_to_play_label.place(x = 5, y = 0)
+        self.rounds_to_play_option.place(x = 150, y = 0)
 
-        self.deck_penetration_label = Label(master, text="Deck Penetration", font = helv28)
-        self.deck_penetration_option = Entry(master, textvariable=self.deck_penetration_variable,
-                                             font = helv28)
-        self.deck_penetration_label.grid(row=2, column=0)
-        self.deck_penetration_option.grid(row=2, column=1)
+        self.decks_label = Label(master, text = "Decks", font = helv18)
+        self.decks_option = Entry(master, textvariable = self.decks_variable, font = helv18)
+        self.decks_label.place(x = 5, y = 75)
+        self.decks_option.place(x = 150, y = 75)
 
+        self.deck_penetration_label = Label(master, text = "Shoe depth", font = helv18)
+        self.deck_penetration_option = Entry(master, textvariable = self.deck_penetration_variable,
+                                             font = helv18)
+        self.deck_penetration_label.place(x = 5, y = 150)
+        self.deck_penetration_option.place(x = 150, y = 150)
+
+        self.strategy_label = Label(master, text = "Strategy", font = helv18)
         self.card_counting_variable = StringVar(master)
         self.card_counting_variable.set(strategy[0])
         self.card_counting_option = OptionMenu(master, self.card_counting_variable, *strategy)
-        self.card_counting_option.config(font = helv28)
+        self.card_counting_option.config(font = helv18)
         self.card_counting_menu = root.nametowidget(self.card_counting_option.menuname)
         self.card_counting_menu.config(font = helv20)
-        self.card_counting_option.grid(row = 0, column = 2)
+        self.strategy_label.place(x = 400, y = 0)
+        self.card_counting_option.place(x = 500, y = 0)
 
+        self.five_card_win_label = Label(master, text = "5 card win", font = helv18)
         self.five_card_win_variable = StringVar(master)
         self.five_card_win_variable.set(five_card_win[0])
         self.five_card_win_option = OptionMenu(master, self.five_card_win_variable, *five_card_win)
-        self.five_card_win_option.config(font = helv28)
+        self.five_card_win_option.config(font = helv18)
         self.five_card_win_menu = root.nametowidget(self.five_card_win_option.menuname)
         self.five_card_win_menu.config(font=helv20)
-        self.five_card_win_option.grid(row = 1, column = 2)
+        self.five_card_win_label.place(x = 400, y = 75)
+        self.five_card_win_option.place(x = 600, y = 75)
 
+        self.blackjack_payout_label = Label(master, text = "Blackjack payout", font = helv18)
         self.blackjack_payout_variable = StringVar(master)
         self.blackjack_payout_variable.set(blackjack_payout[0])
         self.blackjack_payout_option = OptionMenu(master, self.blackjack_payout_variable, *blackjack_payout)
-        self.blackjack_payout_option.config(font=helv28)
+        self.blackjack_payout_option.config(font=helv18)
         self.blackjack_payout_menu = root.nametowidget(self.blackjack_payout_option.menuname)
         self.blackjack_payout_menu.config(font=helv20)
-        self.blackjack_payout_option.grid(row = 2, column = 2)
+        self.blackjack_payout_label.place(x = 400, y = 150)
+        self.blackjack_payout_option.place(x = 600, y = 150)
 
-        self.run_button = Button(master, text="Simulate", command = lambda: self.start_simulation(master, helv28)
-                                 , font = helv28)
-        self.run_button.grid(row = 8, column = 1)
+        self.run_button = Button(master, text = "Simulate", command = lambda: self.start_simulation(master, helv18)
+                                 , font = helv18, height = 5, width = 12)
+        self.run_button.place(x = 20, y = 800)
 
-        self.close_button = Button(master, text="Close", command=master.quit, font = helv28)
-        self.close_button.grid(row = 8, column = 0)
+        self.close_button = Button(master, text = "Close", command = master.quit, font = helv18, height = 5, width = 12)
+        self.close_button.place(x = 270, y = 800)
+
+        self.help_button = Button(master, text = "Help", command = lambda: self.help(),
+                                  font=helv18, height = 5, width = 12)
+        self.help_button.place(x = 520, y = 800)
+
 
     def start_simulation(self, master, helv28):
         blackjack = Game(self.round_number_func(), self.number_of_decks_func(), self.deck_penetration_func(),
@@ -458,54 +473,60 @@ class GUI:
             return True
         else:
             return False
+
+    def help(self):
+        pass
     def profit_graph(self, blackjack, master):
         data = pd.DataFrame({"Round": blackjack.rounds_played_list, "Profit": blackjack.profit_list})
-        profit_graph = plt.Figure(figsize = (6, 5), dpi = 100)
+        profit_graph = plt.Figure(figsize = (6.7, 4.7), dpi = 100)
         ax1 = profit_graph.add_subplot(111)
         line1 = FigureCanvasTkAgg(profit_graph, master)
-        line1.get_tk_widget().grid(row = 5, column = 5)
+        line1.get_tk_widget().place(x = 820, y = 10)
         data = data[["Round", "Profit"]].groupby("Round").sum()
         data.plot(kind = "line", legend = True, ax = ax1, color = "r", fontsize = 10)
         ax1.set_title("Round vs Profit")
     def count_graph(self, blackjack, master):
         data = pd.DataFrame({"Round": blackjack.rounds_played_list, "Count": blackjack.count_list})
-        count_graph = plt.Figure(figsize= (6, 5), dpi=100)
+        count_graph = plt.Figure(figsize= (6.7, 4.7), dpi=100)
         ax1 = count_graph.add_subplot(111)
         line1 = FigureCanvasTkAgg(count_graph, master)
-        line1.get_tk_widget().grid(row = 10, column = 5)
+        line1.get_tk_widget().place(x = 820, y = 510)
         data = data[["Round", "Count"]].groupby("Round").sum()
         data.plot(kind = "line", legend = True, ax = ax1, color = "b", fontsize = 10, linewidth = 0.25)
         ax1.set_title("Round vs Count")
 
     def output_info(self, blackjack, master, helv28):
         final_profit_label = Label(master, text = f"Final profit: {blackjack.profit}", font = helv28)
-        final_profit_label.grid(row = 4, column = 0)
+        final_profit_label.place(x = 270, y = 710)
         hands_won_label = Label(master, text = f"Hands won: {blackjack.hands_won}", font = helv28)
-        hands_won_label.grid(row = 5, column = 0)
+        hands_won_label.place(x = 5, y = 275)
         hands_drew_label = Label(master, text=f"Hands drew: {blackjack.hands_drew}", font=helv28)
-        hands_drew_label.grid(row=5, column=1)
+        hands_drew_label.place(x = 250, y = 275)
         hands_lost_label = Label(master, text=f"Hands lost: {blackjack.hands_lost}", font=helv28)
-        hands_lost_label.grid(row=5, column=2)
+        hands_lost_label.place(x = 500, y = 275)
         hands_surrendered_label = Label(master, text=f"Hands surrendered: {blackjack.hands_surrendered}", font=helv28)
-        hands_surrendered_label.grid(row=5, column=3)
+        hands_surrendered_label.place(x = 5, y = 625)
         hands_blackjack_label = Label(master, text=f"Hands blackjack: {blackjack.hands_blackjack}", font=helv28)
-        hands_blackjack_label.grid(row=6, column=0)
+        hands_blackjack_label.place(x = 5, y = 450)
         hands_21_label = Label(master, text=f"Hands reached 21: {blackjack.hands_21}", font=helv28)
-        hands_21_label.grid(row=6, column=1)
+        hands_21_label.place()
         hands_bust_label = Label(master, text=f"Hands bust: {blackjack.hands_bust}", font=helv28)
-        hands_bust_label.grid(row=6, column=2)
-        hands_player_beat_dealer_label = Label(master, text=f"Hands player closer to 21 than dealer: "
+        hands_bust_label.place(x = 590, y = 625)
+        hands_player_beat_dealer_label = Label(master, text=f"Hands player>dealer: "
                                                              f"{blackjack.hands_player_beat_dealer}", font=helv28)
-        hands_player_beat_dealer_label.grid(row=6, column=3)
-        hands_dealer_beat_player_label = Label(master, text=f"Hands dealer closer to 21 than player: "
+        hands_player_beat_dealer_label.place(x = 250, y = 450)
+        hands_dealer_beat_player_label = Label(master, text=f"Hands dealer>player: "
                                                             f"{blackjack.hands_dealer_beat_player}", font=helv28)
-        hands_dealer_beat_player_label.grid(row=7, column=0)
+        hands_dealer_beat_player_label.place(x = 280, y = 625)
         hands_dealer_bust_label = Label(master, text=f"Hands dealer bust: {blackjack.hands_dealer_bust}", font=helv28)
-        hands_dealer_bust_label.grid(row=7, column=1)
+        hands_dealer_bust_label.place(x = 540, y = 450)
 
 
 root = Tk()
-root.geometry("2000x1250")
+root.geometry("1500x1000")
+canvas = Canvas(root)
+canvas.create_line(750, 0, 750, 1000)
+canvas.place()
 gui = GUI(root)
 root.mainloop()
 
