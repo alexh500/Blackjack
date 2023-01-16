@@ -827,12 +827,21 @@ class GUI:
 
     def round_number_func(self):
         # defines the method round number func
-        for i in self.rounds_to_play_variable.get().replace(",", ""):
-            if i not in ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", ","]:
-            # this is one of the many stages of validation. This checks if the rounds to play variable contains any
-            # non-number characters
+        for i in range(0, len(self.rounds_to_play_variable.get())):
+            if self.rounds_to_play_variable.get()[i] not in ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", ","]:
+                # this is one of the many stages of validation. This checks if the rounds to play variable contains any
+                # non-number or comma characters
                 return 1
-                # if there are any non-number characters, it is set to only play 1 round
+                # if there are any non-number or commas characters, it is set to only play 1 round
+
+        for i in range(-1, -len(self.rounds_to_play_variable.get()) - 1, -1):
+            # cycles through indexes -1 to -length of the round to play variable value
+            if self.rounds_to_play_variable.get()[i] == "," and i % 4 != 0:
+                # checks if a character in the rounds to play variable value is a comma and if it is in a valid spot
+                # for a comma
+                return 1
+                # if a comma is in an invalid spot, 1 round is played
+
         return int(self.rounds_to_play_variable.get().replace(",", ""))
         # if the variable is a number, the rounds to play variable is set as rounding that number down
         # to the nearest integer
@@ -841,8 +850,8 @@ class GUI:
         # defines the method deck penetration func
         for i in self.deck_penetration_variable.get():
             if i not in ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "."]:
-            # another example of validation. This checks if the deck penetration variable contains any non-number
-            # or dot characters
+                # another example of validation. This checks if the deck penetration variable contains any non-number
+                # or dot characters
                 return 1
                 # if there are any non-number or dot characters, it is set to have a deck penetration of 1
         return float(self.deck_penetration_variable.get())
@@ -851,12 +860,21 @@ class GUI:
 
     def number_of_decks_func(self):
         # defines the method number of decks func
-        for i in self.decks_variable.get():
-            if i not in ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", ","]:
-                # another example of validation. This checks if the number of decks variable contains any non-number
-                # characters
+        for i in range(0, len(self.decks_variable.get())):
+            if self.decks_variable.get()[i] not in ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", ","]:
+                # this is one of the many stages of validation. This checks if the decks variable contains any
+                # non-number or comma characters
                 return 1
-            # if there are any non-number characters, it is set to 1 which means the shoe only contains 1 deck
+                # if there are any non-number or commas characters, it is set so that the shoe only contains 1 deck
+
+        for i in range(-1, -len(self.decks_variable.get()) - 1, -1):
+            # cycles through indexes -1 to -length of the decks variable value
+            if self.decks_variable.get()[i] == "," and i % 4 != 0:
+                # checks if a character in the decks variable value is a comma and if it is in a valid spot
+                # for a comma
+                return 1
+                # if a comma is in an invalid spot, 1 deck is used in the shoe
+
         return int(self.decks_variable.get())
         # if the variable is a number, the number of decks variable is set as rounding the number down to the
         # nearset integer
@@ -903,16 +921,21 @@ class GUI:
         close_button.place(x=5, y=5)
         # this places the close button at x coordinate 5 and y coordinate 5
 
-        text_box_input = Message(help_window, text="Input parameters\nRounds: This is the number of rounds to be played"
-                                                   "\nDecks: This is the number of decks to be used in the shoe\nShoe "
-                                                   "Depth: This is how far the shoe should be played into before being "
-                                                   "remade. The value is 0 to 1, where 1 means the shoe is fully played"
-                                                   "\nStrategy: This has the options for the 2 ways of playing, basic "
-                                                   "strategy or card counting which uses the high low system\n5 card win: "
-                                                   "This is either yes or no and determines whether the rule of if the "
-                                                   "player gets 5 cards and still is not bust they win is being played"
-                                                   "\nBlackjack payout: This is where you can select one of the 3 most "
-                                                   "common blackjack payout ratios in blackjack, 3:2, 6:5 or 2:1")
+        text_box_input = Message(help_window, text="Input parameters\nRounds: This is the number of rounds to be"
+                                                   " played. If it is anything that is not an integer, it is set to 1"
+                                                   "\nDecks: This is the number of decks to be used in the shoe. If it "
+                                                   "is anything that is not an integer, it is set to 1\nShoe Depth: "
+                                                   "This is how far the shoe should be played into before being "
+                                                   "remade. The value is 0 to 1, where 1 means the shoe is fully "
+                                                   "played. The simulate button will not work if it is a number not "
+                                                   "between 0 and 1. If it is not a number, it is set to be 1"
+                                                   "\nStrategy: This has the options for the 2 ways of playing, "
+                                                   "basic strategy or card counting which uses the high low system\n"
+                                                   "5 card win: This is either yes or no and determines whether the "
+                                                   "rule of if the player gets 5 cards and still is not bust they win "
+                                                   "is being played\nBlackjack payout: This is where you can select one"
+                                                   " of the 3 most common blackjack payout ratios in blackjack, "
+                                                   "3:2, 6:5 or 2:1")
         # this creates a variable called text box input. It is a message. It is on the help window. The text describes
         # the meanings of all the input parameters that the user can customise
         text_box_input.place(x=50, y=20)
@@ -992,7 +1015,7 @@ class GUI:
         # the title of Round vs Profit is set
 
     def output_info(self, blackjack, master, helv28):
-        #defines a method output info
+        # defines a method output info
         final_profit_label = Label(master, text=f"Final profit: {blackjack.profit}", font=helv28)
         # this creates a variable called final profit label. It is a label. It is on the master window.
         # The font is helv28. The text states the final profit of the simulation
@@ -1057,10 +1080,10 @@ class GUI:
 
 
 root = Tk()
-#creates the root window
+# creates the root window
 root.geometry("1500x1000")
-#defines the size of the window - 1500 on the x-axis, 1000 on the y-axis
+# defines the size of the window - 1500 on the x-axis, 1000 on the y-axis
 gui = GUI(root)
-#creates an instance of the class GUI
+# creates an instance of the class GUI
 root.mainloop()
-#creates the mainloop that continuously runs
+# creates the mainloop that continuously runs
